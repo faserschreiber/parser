@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">parser</string>
+    <string name="testCaption">Заголовок</string>
+    <string name="testQuoteText">Текст</string>
+    <string name="testBookTitleAuthor">Автор</string>
+    <string name="tempText">Временный текст статьи</string>
+</resources>
