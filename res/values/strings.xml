@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">parser</string>
+    <string name="app_name">Lokomotiv.info News</string>
     <string name="testCaption">Заголовок</string>
     <string name="testQuoteText">Текст</string>
     <string name="testBookTitleAuthor">Автор</string>

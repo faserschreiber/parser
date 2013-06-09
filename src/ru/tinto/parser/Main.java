@@ -11,12 +11,14 @@ import org.htmlcleaner.TagNode;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class Main extends FragmentActivity implements ArticleListFragment.onArticleListItemClickListener {
 
     private ProgressDialog pd;
     private List<String> links;
     private ParseSingleArticle parseSingleArticle;
+    private ParseSite parseSite;
 
     private SingleArticleFragment singleArticleFragment;
     private ArticleListFragment articleListFragment;
@@ -27,15 +29,54 @@ public class Main extends FragmentActivity implements ArticleListFragment.onArti
         setContentView(R.layout.main);
 
         pd = ProgressDialog.show(this, "Подождите...", "Строим список заголовков", true, false);
-        new ParseSite().execute("http://www.lokomotiv.info/all/");
+        parseSite = new  ParseSite();
+        parseSite.execute("http://www.lokomotiv.info/all/");
     }
 
     @Override
     public void itemClick(int i) {
-//        Toast.makeText(this, links.get(i), Toast.LENGTH_SHORT).show();
         pd = ProgressDialog.show(this, "Подождите...", "Cкачиваем статью с сервера", true, false);
         parseSingleArticle = new ParseSingleArticle();
         parseSingleArticle.execute(links.get(i));
+    }
+
+    private void showTitles(){
+        List<String> titles;
+        try {
+            titles = parseSite.get();
+            articleListFragment = new ArticleListFragment();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.fragContainer, articleListFragment)
+                    .commit();
+            articleListFragment.setListAdapter(new ArrayAdapter<String>(Main.this, R.layout.item, titles));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showArticleText(){
+        String s;
+        try {
+            s = parseSingleArticle.get();
+            if (s!=null){
+                singleArticleFragment = SingleArticleFragment.newInstance(s);
+            }
+            else{
+                singleArticleFragment = SingleArticleFragment.newInstance("Return string is 'null'");
+            }
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragContainer, singleArticleFragment)
+                    .addToBackStack(null)
+                    .commit();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 
     private class ParseSite extends AsyncTask<String, Void, List<String>> {
@@ -60,12 +101,7 @@ public class Main extends FragmentActivity implements ArticleListFragment.onArti
 
         protected void onPostExecute(List<String> output) {
             pd.dismiss();
-            articleListFragment = new ArticleListFragment();
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragContainer, articleListFragment)
-                    .commit();
-            articleListFragment.setListAdapter(new ArrayAdapter<String>(Main.this, R.layout.item, output));
+            showTitles();
         }
     }
 
@@ -87,18 +123,7 @@ public class Main extends FragmentActivity implements ArticleListFragment.onArti
         @Override
         protected void onPostExecute(String s) {
             pd.dismiss();
-            if (s!=null){
-                singleArticleFragment = SingleArticleFragment.newInstance(s);
-            }
-            else{
-                singleArticleFragment = SingleArticleFragment.newInstance("Return string is 'null'");
-            }
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragContainer, singleArticleFragment)
-                    .addToBackStack(null)
-                    .commit();
-//            Toast.makeText(Main.this, "done", Toast.LENGTH_SHORT).show();
+            showArticleText();
         }
     }
 }
